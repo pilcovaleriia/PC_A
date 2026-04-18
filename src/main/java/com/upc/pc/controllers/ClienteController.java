@@ -14,7 +14,7 @@ public class ClienteController {
     ClienteServicio clienteServicio;
 
     @PostMapping("/pilco/cliente")
-    public ClienteDTO insertar(ClienteDTO clienteDTO)
+    public ClienteDTO insertar(@RequestBody ClienteDTO clienteDTO)
     {
         return clienteServicio.insertar(clienteDTO);
     }

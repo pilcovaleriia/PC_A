@@ -3,11 +3,13 @@ package com.upc.pc.servicios;
 import com.upc.pc.dtos.ClienteDTO;
 import com.upc.pc.entidades.Cliente;
 import com.upc.pc.repositorios.ClienteRepositorio;
+import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+
 
 @Service
 public class ClienteServicio {
@@ -17,6 +19,7 @@ public class ClienteServicio {
     @Autowired
     ModelMapper modelMapper;
 
+    @Transactional
     public ClienteDTO insertar(ClienteDTO clienteDTO)
     {
         Cliente cliente = modelMapper.map(clienteDTO, Cliente.class);
@@ -29,10 +32,13 @@ public class ClienteServicio {
         return clienteRepositorio.findAll().stream()
                 .map(cliente -> modelMapper.map(cliente, ClienteDTO.class)).toList();
     }
-
+    @Transactional
     public void eliminarCliente(Long pcid)
     {
-        clienteRepositorio.deleteById(pcid);
+        if(clienteRepositorio.existsById(pcid))
+        {
+            clienteRepositorio.deleteById(pcid);
+        }
     }
 
 
