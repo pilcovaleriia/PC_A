@@ -1,4 +1,4 @@
-package com.upc.pc.pilcovaleria;
+package com.upc.pc;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

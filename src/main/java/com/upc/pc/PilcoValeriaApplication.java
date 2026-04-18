@@ -1,4 +1,4 @@
-package com.upc.pc.pilcovaleria;
+package com.upc.pc;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
