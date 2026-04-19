@@ -1,7 +1,6 @@
 package com.upc.pc.servicios;
 
-import com.upc.pc.dtos.ClienteDTO;
-import com.upc.pc.dtos.PedidoDTO;
+import com.upc.pc.dtos.*;
 import com.upc.pc.entidades.Cliente;
 import com.upc.pc.entidades.Pedido;
 import com.upc.pc.repositorios.ClienteRepositorio;
@@ -11,28 +10,47 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 @Service
-public class PedidoServicio
-{
+public class PedidoServicio {
     @Autowired
     PedidoRepositorio pedidoRepositorio;
+    @Autowired
+    ClienteRepositorio clienteRepositorio;
     @Autowired
     ModelMapper modelMapper;
 
     @Transactional
-    public PedidoDTO insertar(PedidoDTO pedidoDTO)
-    {
+    public PedidoResponseDTO insertar(PedidoRequestDTO pedidoDTO) {
+        // Buscar cliente manualmente como en ArticuloService de api-rest
+        Cliente cliente = clienteRepositorio.findById(pedidoDTO.getClienteId())
+                .orElse(null);
+
         Pedido pedido = modelMapper.map(pedidoDTO, Pedido.class);
-        pedido =pedidoRepositorio.save(pedido);
-        return modelMapper.map(pedido, PedidoDTO.class);
+        pedido.setCliente(cliente);
+        pedido = pedidoRepositorio.save(pedido);
+
+        // Mapeo de respuesta asegurando el ID
+        PedidoResponseDTO respuesta = modelMapper.map(pedido, PedidoResponseDTO.class);
+        if (pedido.getCliente() != null) {
+            respuesta.setClienteId(pedido.getCliente().getPcid());
+        }
+        return respuesta;
     }
 
-    public List<PedidoDTO> listarPedido()
-    {
+    public List<PedidoResponseDTO> listarPedido() {
         return pedidoRepositorio.findAll().stream()
-                .map(pedido -> modelMapper.map(pedido, PedidoDTO.class)).toList();
+                .map(pedido -> {
+                    PedidoResponseDTO dto = modelMapper.map(pedido, PedidoResponseDTO.class);
+                    // Seteo manual para evitar el null en el listado
+                    if (pedido.getCliente() != null) {
+                        dto.setClienteId(pedido.getCliente().getPcid());
+                    }
+                    return dto;
+                }).toList();
     }
 
     @Transactional
@@ -44,4 +62,24 @@ public class PedidoServicio
         }
     }
 
+    // Reporte de Rango de Fechas
+    public List<PedidoDTO> pcListarPedidosRangoFechas(Date pcFechaInicio, Date pcFechaFin) {
+        List<Pedido> pcLista = pedidoRepositorio.findByPcfechaBetween(pcFechaInicio, pcFechaFin);
+        return pcLista.stream()
+                .map(pedido -> {
+                    // 1. Mapeo automático básico
+                    PedidoDTO dto = modelMapper.map(pedido, PedidoDTO.class);
+                    // 2. Seteo manual del ID para que no sea null (Metodología simple)
+                    if (pedido.getCliente() != null) {
+                        dto.setClienteId(pedido.getCliente().getPcid());
+                    }
+                    return dto;
+                }).toList();
+    }
+
+    // Reporte de Suma por Ciudad
+    public List<SumaMontoCiudadDTO> pcObtenerSumaPorCiudad() {
+        // El repositorio ya hace el trabajo pesado con la consulta JPQL
+        return pedidoRepositorio.pcObtenerSumaPorCiudad();
+    }
 }
